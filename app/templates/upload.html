@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Upload e Geração de Crachás{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h2 class="text-center mb-4">📥 Importar Inscrições (.csv)</h2>
+
+  <form action="{{ url_for('main.upload') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+    <div class="mb-3">
+      <input type="file" class="form-control" name="file" accept=".csv" required>
+    </div>
+    <div class="d-grid">
+      <button type="submit" class="btn btn-primary">Enviar</button>
+    </div>
+  </form>
+
+  <div id="feedback" class="alert mt-4 d-none" role="alert"></div>
+
+  <div id="crachaSection" class="mt-4 d-none text-center">
+    <h5 class="mb-3">🎫 Gerar crachás agora?</h5>
+    <a href="{{ url_for('main.generate') }}" class="btn btn-success">Gerar Crachás</a>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('uploadForm');
+  const feedback = document.getElementById('feedback');
+  const crachaSection = document.getElementById('crachaSection');
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    feedback.classList.add('d-none');
+    crachaSection.classList.add('d-none');
+
+    const response = await fetch(form.action, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (response.ok) {
+      feedback.classList.remove('d-none');
+      feedback.classList.add('alert-success');
+      feedback.textContent = '✅ Upload realizado com sucesso!';
+      crachaSection.classList.remove('d-none');
+    } else {
+      feedback.classList.remove('d-none');
+      feedback.classList.add('alert-danger');
+      feedback.textContent = '❌ Erro ao fazer upload. Verifique o arquivo.';
+    }
+  });
+</script>
+{% endblock %}

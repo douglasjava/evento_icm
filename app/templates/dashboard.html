@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard de Presenças{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <h2 class="text-center mb-4">📊 Dashboard de Presenças</h2>
+
+  <div class="row text-center mb-4">
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Total de Inscritos</h5>
+          <p class="fs-4 fw-bold text-primary">{{ total_inscritos }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Total Presentes</h5>
+          <p class="fs-4 fw-bold text-success">{{ total_presentes }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Presença Geral</h5>
+          <p class="fs-4 fw-bold text-info">{{ percentual }}%</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-5">
+    <canvas id="graficoGeral" class="mx-auto d-block" style="max-width: 600px;"></canvas>
+  </div>
+
+  <div class="mb-5">
+    <canvas id="graficoIgrejas" class="mx-auto d-block" style="max-width: 600px;"></canvas>
+  </div>
+
+  <div class="text-center mt-4">
+    <a href="/download-presentes" class="btn btn-primary" download>📥 Baixar lista de presentes</a>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctxGeral = document.getElementById('graficoGeral').getContext('2d');
+  new Chart(ctxGeral, {
+    type: 'bar',
+    data: {
+      labels: ['Inscritos', 'Presentes'],
+      datasets: [{
+        label: 'Total',
+        data: [{{ total_inscritos }}, {{ total_presentes }}],
+        backgroundColor: ['#ccc', '#4caf50']
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: 'Resumo Geral' }
+      }
+    }
+  });
+
+  const ctxIgrejas = document.getElementById('graficoIgrejas').getContext('2d');
+  new Chart(ctxIgrejas, {
+    type: 'pie',
+    data: {
+      labels: {{ igrejas|map(attribute='igreja')|list|tojson }},
+      datasets: [{
+        label: 'Presentes por Igreja',
+        data: {{ igrejas|map(attribute='presentes')|list|tojson }},
+        backgroundColor: [
+          '#2196f3', '#ff9800', '#8bc34a', '#f44336',
+          '#9c27b0', '#00bcd4', '#ffc107', '#795548',
+          '#e91e63', '#607d8b'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: { display: true, text: 'Distribuição por Igreja' }
+      }
+    }
+  });
+</script>
+{% endblock %}
