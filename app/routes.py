@@ -3,18 +3,16 @@ import pandas as pd
 import uuid
 from flask import Blueprint, render_template, request, jsonify, redirect, flash
 from datetime import datetime
-from flask import send_file
 import unicodedata
 import re
 from .models import get_db
 from app.utils.pdf_generator import gerar_crachas
 import csv
-from flask import send_file
-from io import StringIO
 import io
 import zipfile
 from flask import send_file
 from werkzeug.utils import secure_filename
+from io import BytesIO, StringIO
 
 
 
