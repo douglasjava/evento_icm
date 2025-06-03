@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import uuid
-from flask import Blueprint, render_template, request, jsonify, redirect, flash
+from flask import Blueprint, render_template, request, jsonify, redirect, flash, abort
 from datetime import datetime
 import unicodedata
 import re
@@ -197,6 +197,52 @@ def download_presentes():
         download_name='presentes.csv',
         as_attachment=True
     )
+
+@bp.route('/inscritos')
+def listar_inscritos():
+    db = get_db()
+    cur = db.cursor()
+    cur.execute("SELECT id, nome, igreja FROM inscritos")
+    inscritos = cur.fetchall()
+    return render_template('listar_inscritos.html', inscritos=inscritos)
+
+
+@bp.route('/generate-selected', methods=['POST'])
+def generate_selected():
+    # 'selected_ids' virá de um form do tipo checkbox com name="selected_ids"
+    selected = request.form.getlist('selected_ids')
+    if not selected:
+        # Nenhum inscrito selecionado
+        return abort(400, "Nenhum participante selecionado.")
+
+    # Converter para inteiros e buscar no banco
+    try:
+        ids = [int(i) for i in selected]
+    except ValueError:
+        return abort(400, "IDs inválidos.")
+
+    db = get_db()
+    cur = db.cursor()
+
+    # Buscar apenas os inscritos cujos IDs foram selecionados
+    placeholder = ",".join("?" for _ in ids)
+    sql = f"SELECT nome, igreja, qrcode FROM inscritos WHERE id IN ({placeholder})"
+    cur.execute(sql, ids)
+    inscritos = cur.fetchall()
+
+    if not inscritos:
+        return abort(404, "Nenhum participante encontrado para os IDs fornecidos.")
+
+    # gerar_crachas() espera uma lista de dicts ou tuplas com (nome, igreja, qrcode)
+    # aqui, nosso cur.fetchall() retorna Row (acessível por índice ou por chave), mas gerar_crachas já trabalha com indices
+    pdf_buffer = gerar_crachas(inscritos)
+    return send_file(
+        pdf_buffer,
+        as_attachment=True,
+        download_name='crachas_selecionados.pdf',
+        mimetype='application/pdf'
+    )
+
 
 def sanitize_text(text):
     # Remove acentos
